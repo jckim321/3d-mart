@@ -1,5 +1,44 @@
 const THREE = window.THREE;
 
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCYQWb8dEno__POur0UABfi0F9JR4i_XQw",
+  authDomain: "dive-travel-9dcf7.firebaseapp.com",
+  projectId: "dive-travel-9dcf7",
+  storageBucket: "dive-travel-9dcf7.firebasestorage.app",
+  messagingSenderId: "996020953462",
+  appId: "1:996020953462:web:81c9bf7db384321c335a57",
+  measurementId: "G-W724QN8LBY"
+};
+
+// Initialize Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+  const analytics = firebase.analytics();
+  const storage = firebase.storage();
+  console.log('Firebase initialized successfully');
+  
+  // Firebase Storage 예시 함수
+  async function uploadToFirebase(file, fileName) {
+    try {
+      const storageRef = storage.ref(`assets/${fileName}`);
+      await storageRef.put(file);
+      const url = await storageRef.getDownloadURL();
+      console.log('File uploaded to Firebase Storage:', url);
+      return url;
+    } catch (error) {
+      console.error('Firebase Storage upload error:', error);
+      throw error;
+    }
+  }
+  
+  // 전역 함수로 등록
+  window.uploadToFirebase = uploadToFirebase;
+  
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+}
+
 // Scene, Camera, Renderer 설정
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xFFFFFF); // 실내 느낌의 흰색 배경
