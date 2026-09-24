@@ -51,21 +51,42 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.getElementById('container').appendChild(renderer.domElement);
 
-// 조명 설정 (더 밝게)
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+// 조명 설정 (편의점 스타일 밝은 조명)
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
 directionalLight.position.set(10, 25, 10);
 directionalLight.castShadow = true;
 scene.add(directionalLight);
 
-// 추가 조명 (공간 더 밝게)
-const additionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-additionalLight.position.set(-10, 20, -10);
-scene.add(additionalLight);
+// 천장에 밝은 형광등(LED 백색광) 격자 패턴 추가
+function createCeilingLight(x, z) {
+    const lightGeometry = new THREE.BoxGeometry(2, 0.1, 0.5);
+    const lightMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xFFFFFF,
+        emissive: 0xFFFFFF,
+        emissiveIntensity: 0.8
+    });
+    const light = new THREE.Mesh(lightGeometry, lightMaterial);
+    light.position.set(x, 7.9, z);
+    
+    // 실제 조명 추가
+    const pointLight = new THREE.PointLight(0xFFFFFF, 0.5, 10);
+    pointLight.position.set(x, 7.5, z);
+    scene.add(pointLight);
+    
+    return light;
+}
 
-// 바닥 생성 (하얀색 타일 텍스처 느낌)
+// 천장에 형광등 격자 배치
+for (let x = -18; x <= 18; x += 6) {
+    for (let z = -18; z <= 18; z += 6) {
+        scene.add(createCeilingLight(x, z));
+    }
+}
+
+// 바닥 생성 (빛을 반사하는 밝은 회색 타일)
 const floorSize = 50;
 const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
 
@@ -75,12 +96,12 @@ canvas.width = 512;
 canvas.height = 512;
 const ctx = canvas.getContext('2d');
 
-// 하얀색 배경
-ctx.fillStyle = '#FFFFFF';
+// 밝은 회색 배경
+ctx.fillStyle = '#D3D3D3';
 ctx.fillRect(0, 0, 512, 512);
 
 // 타일 격자무늬
-ctx.strokeStyle = '#E0E0E0';
+ctx.strokeStyle = '#C0C0C0';
 ctx.lineWidth = 2;
 const tileSize = 64;
 
@@ -103,8 +124,8 @@ floorTexture.repeat.set(8, 8);
 
 const floorMaterial = new THREE.MeshStandardMaterial({ 
     map: floorTexture,
-    roughness: 0.3,
-    metalness: 0.1
+    roughness: 0.2,    // 더 매끄러운 표면
+    metalness: 0.3      // 빛 반사 증가
 });
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
@@ -171,6 +192,59 @@ const productColors = [
 
 // 상품 아이템들을 저장할 배열
 const productItems = [];
+
+// 곤돌라 선반 생성 (양면 진열 낮은 선반)
+function createGondolaShelf(x, z, rotation = 0) {
+    const gondolaGroup = new THREE.Group();
+    
+    // 선반 프레임 (강철)
+    const frameGeometry = new THREE.BoxGeometry(4, 1.2, 1.5);
+    const frameMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x708090, // 강철 회색
+        metalness: 0.8,
+        roughness: 0.2
+    });
+    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    frame.position.y = 0.6;
+    frame.castShadow = true;
+    frame.receiveShadow = true;
+    gondolaGroup.add(frame);
+    
+    // 양면 선반 레벨들
+    for (let side = -1; side <= 1; side += 2) {
+        for (let i = 0; i < 2; i++) {
+            const shelfGeometry = new THREE.BoxGeometry(3.8, 0.08, 0.6);
+            const shelfMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xD3D3D3,
+                metalness: 0.5,
+                roughness: 0.3
+            });
+            const shelf = new THREE.Mesh(shelfGeometry, shelfMaterial);
+            shelf.position.set(0, 0.25 + i * 0.4, side * 0.3);
+            shelf.receiveShadow = true;
+            gondolaGroup.add(shelf);
+            
+            // 상품들
+            for (let j = 0; j < 5; j++) {
+                const productGeometry = new THREE.BoxGeometry(0.5, 0.6, 0.4);
+                const randomColor = productColors[Math.floor(Math.random() * productColors.length)];
+                const productMaterial = new THREE.MeshStandardMaterial({ 
+                    color: randomColor
+                });
+                const product = new THREE.Mesh(productGeometry, productMaterial);
+                product.position.set(-1.5 + j * 0.7, 0.55 + i * 0.4, side * 0.3);
+                product.castShadow = true;
+                
+                productItems.push(product);
+                gondolaGroup.add(product);
+            }
+        }
+    }
+    
+    gondolaGroup.position.set(x, 0, z);
+    gondolaGroup.rotation.y = rotation;
+    return gondolaGroup;
+}
 
 // 마트 선반들 생성
 function createShelf(x, z, rotation = 0) {
@@ -248,6 +322,11 @@ scene.add(createShelf(6, -6, 0));
 scene.add(createShelf(-6, 6, 0));
 scene.add(createShelf(6, 6, 0));
 
+// 중앙에 곤돌라 선반 3열 배치 (양면 진열)
+scene.add(createGondolaShelf(0, -8, 0));
+scene.add(createGondolaShelf(0, 0, 0));
+scene.add(createGondolaShelf(0, 8, 0));
+
 // 계산대 생성 (입구 쪽으로 이동)
 const counterGroup = new THREE.Group();
 
@@ -286,6 +365,65 @@ counterGroup.add(screen);
 
 counterGroup.position.set(0, 0, 15); // 입구 쪽(앞쪽)으로 이동
 scene.add(counterGroup);
+
+// 대형 냉장고(유리문) 생성 - 안쪽 벽
+function createCooler(x, z, width) {
+    const coolerGroup = new THREE.Group();
+    
+    // 냉장고 본체
+    const bodyGeometry = new THREE.BoxGeometry(width, 3, 1);
+    const bodyMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xE0E0E0,
+        metalness: 0.3,
+        roughness: 0.4
+    });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.y = 1.5;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    coolerGroup.add(body);
+    
+    // 유리문
+    const doorGeometry = new THREE.BoxGeometry(width - 0.2, 2.5, 0.1);
+    const doorMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x87CEEB,
+        transparent: true,
+        opacity: 0.3,
+        metalness: 0.9,
+        roughness: 0.1
+    });
+    const door = new THREE.Mesh(doorGeometry, doorMaterial);
+    door.position.set(0, 1.4, 0.5);
+    door.castShadow = true;
+    coolerGroup.add(door);
+    
+    // 냉장고 내부 조명
+    const internalLight = new THREE.PointLight(0xFFFFFF, 0.3, 3);
+    internalLight.position.set(0, 1.5, 0.3);
+    coolerGroup.add(internalLight);
+    
+    // 음료수 상품들
+    for (let i = 0; i < Math.floor(width / 0.8); i++) {
+        const canGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.5, 16);
+        const canMaterial = new THREE.MeshStandardMaterial({ 
+            color: new THREE.Color().setHSL(Math.random(), 0.7, 0.5)
+        });
+        const can = new THREE.Mesh(canGeometry, canMaterial);
+        can.position.set(-width/2 + 0.4 + i * 0.8, 0.8, 0.2);
+        can.castShadow = true;
+        
+        productItems.push(can);
+        coolerGroup.add(can);
+    }
+    
+    coolerGroup.position.set(x, 0, z);
+    return coolerGroup;
+}
+
+// 안쪽 벽에 대형 냉장고 배치
+scene.add(createCooler(-10, -24, 8));
+scene.add(createCooler(0, -24, 8));
+scene.add(createCooler(10, -24, 8));
 
 // 아바타 생성 (그룹으로 구성)
 const avatarGroup = new THREE.Group();
@@ -462,7 +600,7 @@ function animate() {
         
         // 마트 경계 제한 (실내 공간에 맞춰 조정)
         avatarGroup.position.x = Math.max(-22, Math.min(22, avatarGroup.position.x));
-        avatarGroup.position.z = Math.max(-22, Math.min(22, avatarGroup.position.z));
+        avatarGroup.position.z = Math.max(-24, Math.min(22, avatarGroup.position.z));
     }
     
     // 상품과의 거리 확인 및 팝업 표시
