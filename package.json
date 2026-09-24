@@ -1,0 +1,20 @@
+{
+  "name": "3d-mart",
+  "version": "1.0.0",
+  "description": "3D 가상 마트 웹 애플리케이션",
+  "main": "app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["threejs", "3d", "mart"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
