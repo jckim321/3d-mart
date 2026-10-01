@@ -878,6 +878,101 @@ const keys = {
     right: false
 };
 
+// 모바일 터치 컨트롤
+function setupMobileControls() {
+    const controlBtns = document.querySelectorAll('.control-btn');
+    
+    controlBtns.forEach(btn => {
+        const direction = btn.dataset.direction;
+        
+        const startMove = (e) => {
+            e.preventDefault();
+            if (direction && keys.hasOwnProperty(direction)) {
+                keys[direction] = true;
+            }
+        };
+        
+        const endMove = (e) => {
+            e.preventDefault();
+            if (direction && keys.hasOwnProperty(direction)) {
+                keys[direction] = false;
+            }
+        };
+        
+        // 터치 이벤트
+        btn.addEventListener('touchstart', startMove);
+        btn.addEventListener('touchend', endMove);
+        btn.addEventListener('touchcancel', endMove);
+        
+        // 마우스 이벤트 (데스크톱 테스트용)
+        btn.addEventListener('mousedown', startMove);
+        btn.addEventListener('mouseup', endMove);
+        btn.addEventListener('mouseleave', endMove);
+    });
+    
+    // 회전 버튼
+    const rotateLeftBtn = document.getElementById('rotate-left');
+    const rotateRightBtn = document.getElementById('rotate-right');
+    
+    let rotateInterval = null;
+    
+    const startRotateLeft = (e) => {
+        e.preventDefault();
+        mouseX += 0.1;
+        if (rotateInterval) clearInterval(rotateInterval);
+        rotateInterval = setInterval(() => {
+            mouseX += 0.03;
+        }, 50);
+    };
+    
+    const stopRotate = (e) => {
+        e.preventDefault();
+        if (rotateInterval) {
+            clearInterval(rotateInterval);
+            rotateInterval = null;
+        }
+    };
+    
+    const startRotateRight = (e) => {
+        e.preventDefault();
+        mouseX -= 0.1;
+        if (rotateInterval) clearInterval(rotateInterval);
+        rotateInterval = setInterval(() => {
+            mouseX -= 0.03;
+        }, 50);
+    };
+    
+    // 터치 이벤트
+    rotateLeftBtn.addEventListener('touchstart', startRotateLeft);
+    rotateLeftBtn.addEventListener('touchend', stopRotate);
+    rotateLeftBtn.addEventListener('touchcancel', stopRotate);
+    
+    rotateRightBtn.addEventListener('touchstart', startRotateRight);
+    rotateRightBtn.addEventListener('touchend', stopRotate);
+    rotateRightBtn.addEventListener('touchcancel', stopRotate);
+    
+    // 마우스 이벤트
+    rotateLeftBtn.addEventListener('mousedown', startRotateLeft);
+    rotateLeftBtn.addEventListener('mouseup', stopRotate);
+    rotateLeftBtn.addEventListener('mouseleave', stopRotate);
+    
+    rotateRightBtn.addEventListener('mousedown', startRotateRight);
+    rotateRightBtn.addEventListener('mouseup', stopRotate);
+    rotateRightBtn.addEventListener('mouseleave', stopRotate);
+}
+
+// 모바일 컨트롤 초기화
+if (window.innerWidth <= 768) {
+    setupMobileControls();
+}
+
+// 화면 크기 변경 시 모바일 컨트롤 재설정
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
+        setupMobileControls();
+    }
+});
+
 const speed = 0.15;
 const rotationSpeed = 0.03;
 const interactionDistance = 2.0; // 상품과의 상호작용 거리

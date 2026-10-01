@@ -65,3 +65,168 @@ body {
 .hidden {
     display: none !important;
 }
+
+/* 모바일 컨트롤 */
+#mobile-controls {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 300;
+}
+
+.control-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.direction-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(3, 60px);
+    gap: 5px;
+}
+
+.control-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.control-btn:active {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(0.95);
+}
+
+.control-btn.up { grid-column: 2; grid-row: 1; }
+.control-btn.left { grid-column: 1; grid-row: 2; }
+.control-btn.right { grid-column: 3; grid-row: 2; }
+.control-btn.down { grid-column: 2; grid-row: 3; }
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(76, 175, 80, 0.5);
+    border: 2px solid rgba(76, 175, 80, 0.8);
+    border-radius: 50%;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.action-btn:active {
+    background: rgba(76, 175, 80, 0.7);
+    transform: scale(0.95);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    #instructions {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 10px;
+        font-size: 12px;
+    }
+    
+    #instructions h2 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    #instructions p {
+        font-size: 11px;
+        margin: 3px 0;
+    }
+    
+    #item-popup {
+        min-width: 150px;
+        padding: 15px 20px;
+    }
+    
+    #item-popup h3 {
+        font-size: 16px;
+    }
+    
+    #item-popup p {
+        font-size: 12px;
+    }
+    
+    #mobile-controls {
+        display: block;
+    }
+    
+    .direction-pad {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(3, 50px);
+    }
+    
+    .control-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .action-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    #instructions {
+        padding: 8px;
+    }
+    
+    #instructions h2 {
+        font-size: 14px;
+    }
+    
+    #instructions p {
+        font-size: 10px;
+    }
+    
+    .direction-pad {
+        grid-template-columns: repeat(3, 45px);
+        grid-template-rows: repeat(3, 45px);
+    }
+    
+    .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .action-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 11px;
+    }
+}
