@@ -1,5 +1,11 @@
 const THREE = window.THREE;
 
+// iOS Safari 호환성 개선
+if (typeof window.THREE === 'undefined') {
+    console.error('Three.js not loaded. Please check internet connection.');
+    alert('3D 라이브러리 로드 중 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
+}
+
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCYQWb8dEno__POur0UABfi0F9JR4i_XQw",
@@ -13,10 +19,17 @@ const firebaseConfig = {
 
 // Initialize Firebase
 try {
-  firebase.initializeApp(firebaseConfig);
-  const analytics = firebase.analytics();
-  const storage = firebase.storage();
-  console.log('Firebase initialized successfully');
+  if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    const analytics = firebase.analytics();
+    const storage = firebase.storage();
+    console.log('Firebase initialized successfully');
+  } else {
+    console.warn('Firebase not loaded, continuing without Firebase');
+  }
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+}
   
   // Firebase Storage 예시 함수
   async function uploadToFirebase(file, fileName) {
@@ -46,10 +59,27 @@ scene.background = new THREE.Color(0xFFFFFF); // 실내 느낌의 흰색 배경
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 2, 5);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-document.getElementById('container').appendChild(renderer.domElement);
+// iOS Safari 호환성을 위한 렌더러 설정
+let renderer;
+try {
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // iOS 성능 최적화
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.getElementById('container').appendChild(renderer.domElement);
+} catch (error) {
+    console.error('WebGL initialization failed:', error);
+    const container = document.getElementById('container');
+    if (container) {
+        container.innerHTML = '<div style="color: red; padding: 20px; text-align: center;">WebGL 초기화에 실패했습니다. 브라우저를 새로고침하거나 다른 브라우저를 사용해주세요.</div>';
+    }
+    renderer = null; // 실패 시 null로 설정
+}
 
 // 조명 설정 (편의점 스타일 밝은 조명)
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
@@ -1054,6 +1084,7 @@ const popup = document.getElementById('item-popup');
 
 // 애니메이션 루프
 function animate() {
+    if (!renderer) return; // 렌더러가 없으면 중지
     requestAnimationFrame(animate);
     
     // 아바타 이동
