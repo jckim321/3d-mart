@@ -1,11 +1,5 @@
 const THREE = window.THREE;
 
-// iOS Safari 호환성 개선
-if (typeof window.THREE === 'undefined') {
-    console.error('Three.js not loaded. Please check internet connection.');
-    alert('3D 라이브러리 로드 중 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
-}
-
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCYQWb8dEno__POur0UABfi0F9JR4i_XQw",
