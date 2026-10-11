@@ -1,7 +1,25 @@
+// Firebase 초기화
+const firebaseConfig = {
+    apiKey: "AIzaSyCYQWb8dEno__POur0UABfi0F9JR4i_XQw",
+    authDomain: "dive-travel-9dcf7.firebaseapp.com",
+    projectId: "dive-travel-9dcf7",
+    storageBucket: "dive-travel-9dcf7.firebasestorage.app",
+    messagingSenderId: "996020953462",
+    appId: "1:996020953462:web:81c9bf7db384321c335a57",
+    measurementId: "G-W724QN8LBY"
+};
+
+// Firebase 초기화
+if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized');
+}
+
 // 3D 앱 초기화
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, starting 3D app...');
     init3DApp();
+    initUploadUI();
 });
 
 function showError(message) {
@@ -27,6 +45,7 @@ function init3DApp() {
         // Scene, Camera, Renderer 설정
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xFFFFFF);
+        window.scene = scene; // 전역 변수로 저장
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 2, 5);
@@ -537,4 +556,99 @@ function init3DApp() {
         console.error('3D app initialization error:', error);
         showError('3D 앱 초기화 오류: ' + error.message);
     }
+}
+
+// 업로드 UI 초기화
+function initUploadUI() {
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadPopup = document.getElementById('upload-popup');
+    const fileInput = document.getElementById('file-input');
+    const confirmBtn = document.getElementById('confirm-upload');
+    const cancelBtn = document.getElementById('cancel-upload');
+    const uploadStatus = document.getElementById('upload-status');
+
+    // 업로드 버튼 클릭
+    uploadBtn.addEventListener('click', () => {
+        uploadPopup.classList.remove('hidden');
+        uploadStatus.textContent = '';
+        uploadStatus.className = '';
+    });
+
+    // 취소 버튼 클릭
+    cancelBtn.addEventListener('click', () => {
+        uploadPopup.classList.add('hidden');
+        fileInput.value = '';
+    });
+
+    // 확인 버튼 클릭
+    confirmBtn.addEventListener('click', async () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            uploadStatus.textContent = '파일을 선택해주세요';
+            uploadStatus.className = 'error';
+            return;
+        }
+
+        uploadStatus.textContent = '업로드 중...';
+        uploadStatus.className = '';
+
+        try {
+            const result = await firebaseManager.uploadFile(file, `uploaded/${Date.now()}_${file.name}`);
+            
+            if (result.success) {
+                uploadStatus.textContent = '업로드 성공!';
+                uploadStatus.className = 'success';
+                
+                // 3D 마트에 이미지 추가
+                addImageToScene(result.url);
+                
+                setTimeout(() => {
+                    uploadPopup.classList.add('hidden');
+                    fileInput.value = '';
+                }, 1500);
+            } else {
+                uploadStatus.textContent = '업로드 실패: ' + result.error;
+                uploadStatus.className = 'error';
+            }
+        } catch (error) {
+            uploadStatus.textContent = '업로드 오류: ' + error.message;
+            uploadStatus.className = 'error';
+        }
+    });
+}
+
+// 이미지를 3D 장면에 추가
+function addImageToScene(imageUrl) {
+    if (!window.scene) return;
+    
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(imageUrl, (texture) => {
+        // 이미지 프레임
+        const frameGeometry = new THREE.BoxGeometry(2, 1.5, 0.1);
+        const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+        const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+        
+        // 이미지 텍스처
+        const imageGeometry = new THREE.PlaneGeometry(1.8, 1.3);
+        const imageMaterial = new THREE.MeshBasicMaterial({ 
+            map: texture,
+            side: THREE.DoubleSide
+        });
+        const image = new THREE.Mesh(imageGeometry, imageMaterial);
+        image.position.z = 0.06;
+        
+        frame.add(image);
+        
+        // 랜덤 위치에 배치
+        frame.position.set(
+            (Math.random() - 0.5) * 20,
+            2 + Math.random() * 2,
+            (Math.random() - 0.5) * 20
+        );
+        
+        frame.castShadow = true;
+        window.scene.add(frame);
+        
+        console.log('Image added to scene:', imageUrl);
+    });
 }
