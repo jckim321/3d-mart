@@ -38,7 +38,7 @@ FIREBASE_MEASUREMENT_ID=your_measurement_id
 # Cloudflare R2 Configuration
 R2_BUCKET_NAME=3d-mart-assets
 R2_ACCESS_KEY_ID=your_access_key_id
-R2_SECRET_ACCESS_KEY=your_secret_access_key
+R2_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY_HERE
 R2_ENDPOINT=https://your_endpoint.r2.cloudflarestorage.com
 ```
 
