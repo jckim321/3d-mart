@@ -416,7 +416,7 @@ function init3DApp() {
                     color = 0xFFA500;
                     break;
                 case 'banana':
-                    geometry = new THREE.CapsuleGeometry(0.08, 0.3, 4, 8);
+                    geometry = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 8);
                     color = 0xFFFF00;
                     break;
                 default:
