@@ -504,6 +504,45 @@ function init3DApp() {
         // 키보드 컨트롤
         const keys = { forward: false, backward: false, left: false, right: false };
         const speed = 0.15;
+        
+        // 마우스 시점 회전
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+        let isMouseDown = false;
+        
+        // 전역 변수로 저장 (모바일 버튼용)
+        window.targetRotationX = targetRotationX;
+        window.targetRotationY = targetRotationY;
+        
+        document.addEventListener('mousedown', (event) => {
+            if (event.button === 0) { // 왼쪽 버튼
+                isMouseDown = true;
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+        
+        document.addEventListener('mousemove', (event) => {
+            if (isMouseDown) {
+                const deltaX = event.clientX - mouseX;
+                const deltaY = event.clientY - mouseY;
+                
+                window.targetRotationY -= deltaX * 0.005;
+                window.targetRotationX -= deltaY * 0.005;
+                
+                // 상하 회전 제한
+                window.targetRotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, window.targetRotationX));
+                
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+            }
+        });
 
         document.addEventListener('keydown', (event) => {
             switch (event.code) {
@@ -546,6 +585,11 @@ function init3DApp() {
             camera.position.copy(avatar.position);
             camera.position.y += 2;
             
+            // 마우스 회전 적용
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = window.targetRotationY;
+            camera.rotation.x = window.targetRotationX;
+            
             renderer.render(scene, camera);
         }
 
@@ -560,6 +604,92 @@ function init3DApp() {
 
 // 업로드 UI 초기화
 function initUploadUI() {
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadPopup = document.getElementById('upload-popup');
+    const fileInput = document.getElementById('file-input');
+    const confirmBtn = document.getElementById('confirm-upload');
+    const cancelBtn = document.getElementById('cancel-upload');
+    const uploadStatus = document.getElementById('upload-status');
+
+    // 업로드 버튼 클릭
+    uploadBtn.addEventListener('click', () => {
+        uploadPopup.classList.remove('hidden');
+        uploadStatus.textContent = '';
+        uploadStatus.className = '';
+    });
+
+    // 취소 버튼 클릭
+    cancelBtn.addEventListener('click', () => {
+        uploadPopup.classList.add('hidden');
+        fileInput.value = '';
+    });
+
+    // 확인 버튼 클릭
+    confirmBtn.addEventListener('click', async () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            uploadStatus.textContent = '파일을 선택해주세요';
+            uploadStatus.className = 'error';
+            return;
+        }
+
+        uploadStatus.textContent = '업로드 중...';
+        uploadStatus.className = '';
+
+        try {
+            const result = await firebaseManager.uploadFile(file, `uploaded/${Date.now()}_${file.name}`);
+            
+            if (result.success) {
+                uploadStatus.textContent = '업로드 성공!';
+                uploadStatus.className = 'success';
+                
+                // 3D 마트에 이미지 추가
+                addImageToScene(result.url);
+                
+                setTimeout(() => {
+                    uploadPopup.classList.add('hidden');
+                    fileInput.value = '';
+                }, 1500);
+            } else {
+                uploadStatus.textContent = '업로드 실패: ' + result.error;
+                uploadStatus.className = 'error';
+            }
+        } catch (error) {
+            uploadStatus.textContent = '업로드 오류: ' + error.message;
+            uploadStatus.className = 'error';
+        }
+    });
+    
+    // 모바일 회전 버튼
+    const rotateLeftBtn = document.getElementById('rotate-left');
+    const rotateRightBtn = document.getElementById('rotate-right');
+    
+    if (rotateLeftBtn && rotateRightBtn) {
+        const handleRotate = (direction) => {
+            if (window.targetRotationY !== undefined) {
+                window.targetRotationY += direction * 0.3;
+            }
+        };
+        
+        rotateLeftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleRotate(1);
+        });
+        
+        rotateLeftBtn.addEventListener('click', (e) => {
+            handleRotate(1);
+        });
+        
+        rotateRightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleRotate(-1);
+        });
+        
+        rotateRightBtn.addEventListener('click', (e) => {
+            handleRotate(-1);
+        });
+    }
+}
     const uploadBtn = document.getElementById('upload-btn');
     const uploadPopup = document.getElementById('upload-popup');
     const fileInput = document.getElementById('file-input');
